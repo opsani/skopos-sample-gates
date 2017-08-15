@@ -30,7 +30,7 @@ docker run -d -p 8100:8100 --restart=unless-stopped --name skopos \
    opsani/skopos:edge
 ```
 
-This command starts the Skopos engine and exposes its API and web-based user interfaces on port 8100 of the host. See [Starting Skopos](http://doc.opsani.com/skopos/edge/README/) for additional options, including enabling authentication.
+This command starts the Skopos engine and exposes its API and web-based user interface on port 8100 of the host. See [Starting Skopos](http://doc.opsani.com/skopos/edge/README/) for additional options, including enabling authentication.
 
 To download the Skopos control utility on Linux:
 
@@ -45,6 +45,13 @@ Or download the control utility for [Mac OS X](https://s3.amazonaws.com/get-skop
 ## Deploy the Sample App
 
 ### Load the Sample App
+
+The sample application is comprised of the following descriptors:
+
+* [model.yaml](/model.yaml) - application model
+* [env-swarm.yaml](/env-swarm.yaml) - basic [TED file](http://doc.opsani.com/skopos/edge/TED-GUIDE/) specifying core plugin and variables (e.g., port numbers, replicas)
+* [env-quality-gates.yaml](/env-quality-gates.yaml) - TED file specifying quality gates
+
 Use `sks-ctl` to load the sample application (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
 
 ```
@@ -62,7 +69,7 @@ The UI displays the Skopos application list when first opened:
 
 Mouse-click on the `sample-gates` application from the app list to open this application, displaying its model view.  This view shows the application components and gateways, connected according to their dependencies.
 
-On application load, Skopos automatically generates a deployment plan.  When executed, this plan transforms the application from its current state to its target state (specified in the app descriptors).  To view this plan in the UI, switch to the plan view (*Switch to Plan* icon in upper right corner):
+On application load, Skopos automatically generates a deployment plan.  When executed, this plan transforms the application from its current state to its target state (as specified in the app descriptors).  To view this plan in the UI, switch to the plan view (*Switch to Plan* icon in upper right corner):
 
 ![skopos sample app](images/plan-view.png)
 
@@ -103,7 +110,7 @@ quality_gates:
                 action: check_access
 ```
 
-These checks are injected in the Skopos generated deployment plan for components deployed with matching images.  These checks are visible as steps in the Skopos UI plan view:  mouse-click on any of the `db`, `redis`, `result` or `vote` components to zoom-in the component plan details.  Here you can see the injected quality gate step for that component.  For example, the `db` component uses the Skopos [postgres probe](https://github.com/opsani/probe-postgres) to verify the postgres API is accessible on the component's service network:
+These checks are injected in the Skopos generated deployment plan for components deployed with matching images.  The quality gate checks are visible as steps in the Skopos UI plan view:  mouse-click on any of the `db`, `redis`, `result` or `vote` components to zoom-in the component plan details.  Here you can see the injected quality gate step for that component.  For example, the `db` component uses the Skopos [postgres probe](https://github.com/opsani/probe-postgres) to verify the postgres API is accessible on the component's service network:
 
 ![skopos sample app](images/db-plan-details.png)
 

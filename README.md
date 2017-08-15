@@ -6,21 +6,21 @@ Skopos Continuous Deployment System
 
 Below you can find a sample application and instructions for starting Skopos and deploying this sample app.  If you want to try out Skopos with your own app, check out our [Getting Started Guide](http://doc.opsani.com/skopos/edge/README/).
 
-_Note: this sample application uses the Skopos "edge" release which has all the latest features and capabilities. The "edge" release is produced automatically from our latest development build which successfully passed the automated test suite. To start using the official beta release instead, see [Getting Started](http://doc.opsani.com/skopos/stable/README/) and the [tutorial app at github](https://github.com/opsani/skopos-sample-app)._
+_Note: this sample application uses the Skopos "edge" release which has all the latest features and capabilities. The "edge" release is produced automatically from our latest development build after successfully passing its automated test suite. To start using the official beta release instead, see [Getting Started - Beta](http://doc.opsani.com/skopos/stable/README/) and this [tutorial app at github](https://github.com/opsani/skopos-sample-app)._
 
 Skopos Sample Application
 ==========================
-This Skopos sample application is a scalable variant of the Docker example Pet Voting Application which uses quality gates to validate its deployment.  [Quality gates](http://doc.opsani.com/skopos/edge/QUALITY-GATES/) attach user defined actions to components in order to *gate* the success of component deployment.
+This Skopos sample application is a scalable variant of the Docker example Pet Voting Application.  Notably, this application uses Skopos quality gates to validate its deployment.  [Quality gates](http://doc.opsani.com/skopos/edge/QUALITY-GATES/) attach user defined actions to components in order to *gate* the success of component deployment.
 
-This sample application exposes two web interfaces - one that allows votes to be cast and one that shows results. This application deploys to Docker Swarm.
+This sample application deploys to Docker Swarm and exposes two web interfaces - one that allows votes to be cast and one that shows results.
 
 ![skopos sample app](images/skopos-sample-gates.png)
 
-## Start Skopos Edge Release
+## Start Skopos (Edge Release)
 Skopos consists of two components:
 
-* the _Skopos engine_, packaged in a single container for simple installation
-* the _Skopos control utility_, a command line utility `sks-ctl`, available for Linux, Mac OS and Windows. The utility may run on the same host where the Skopos engine runs or anywhere else with network access to that host.
+* The _Skopos engine_, packaged in a single container for simple installation
+* The _Skopos control utility_ - a command line utility `sks-ctl`, available for Linux, Mac OS and Windows. This utility may run on the same host where the Skopos engine runs or anywhere else with network access to that host.
 
 To start the Skopos engine, run the following command on a swarm manager node:
 
@@ -30,7 +30,7 @@ docker run -d -p 8100:8100 --restart=unless-stopped --name skopos \
    opsani/skopos:edge
 ```
 
-The command above starts the Skopos engine and expose its API and web-based user interface on port 8100 of the host. See [Starting Skopos](http://doc.opsani.com/skopos/edge/README/) for additional options, including enabling authentication.
+This command starts the Skopos engine and exposes its API and web-based user interfaces on port 8100 of the host. See [Starting Skopos](http://doc.opsani.com/skopos/edge/README/) for additional options, including enabling authentication.
 
 To download the Skopos control utility on Linux:
 
@@ -44,24 +44,100 @@ Or download the control utility for [Mac OS X](https://s3.amazonaws.com/get-skop
 
 ## Deploy the Sample App
 
-#### Load the Sample App
-Use `sks-ctl` to load this sample application (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
+### Load the Sample App
+Use `sks-ctl` to load the sample application (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
 
 ```
 sks-ctl load --project sample-gates \
---env https://s3.amazonaws.com/qg-sample-app/env-swarm.yaml \
---env https://s3.amazonaws.com/qg-sample-app/env-quality-gates.yaml \
-https://s3.amazonaws.com/qg-sample-app/model.yaml
+--env github://opsani/skopos-sample-gates/env-swarm.yaml \
+--env github://opsani/skopos-sample-gates/env-quality-gates.yaml \
+github://opsani/skopos-sample-gates/model.yaml
 ```
 
-This command loads the application model and environment descriptors directly from github.  Once the application is loaded, open the Skopos GUI in a browser:  the GUI is exposed on port 8100 of the host running the Skopos engine.
+This command loads the application model and environment descriptors directly from github.  Once the application is loaded, open the Skopos GUI in a browser:  this UI is exposed on port 8100 of the host running the Skopos engine.
 
-WIP =>
-You can switch the to plan (icon in upper right corner) to view the generated plan for this particular deploy. The plan shows the top level of steps to be run (one for each component plus pre- and post- flight steps). The plan would take into consideration any dependencies between components and upgrade them in the correct order. Each of the top level steps can be expanded to view the set of steps that will be performed for each component. The outcome of each step can trigger either the next step (on success) or a rollback to the previous version (on failure).
+The UI displays the Skopos application list when first opened:
 
-Plan view in the Skopos UI to examine the deployment plan.  Click on any of the `db`, `redis`, `result` or `vote` components to zoom in to the component plan details.  Here you can see the injected quality gate step for that component.
+![skopos sample app](images/app-list.png)
 
-Deploy the application using the UI controls.  If you follow the deployment in the Skopos Plan view UI, you can observe the deployment of each of these components is validated by its associated quality gate.
+Mouse-click on the `sample-gates` application from the app list to open this application, displaying its model view.  This view shows the application components and gateways, connected according to their dependencies.
 
-#### Deploy the Sample App
+On application load, Skopos automatically generates a deployment plan.  When executed, this plan transforms the application from its current state to its target state (specified in the app descriptors).  To view this plan in the UI, switch to the plan view (*Switch to Plan* icon in upper right corner):
 
+![skopos sample app](images/plan-view.png)
+
+The plan view shows the top level steps of the deployment plan, one for each component plus pre-flight and post-flight steps.  Components are ordered according to their dependencies for deployment.  Each of the top level steps can be expanded to view the detailed deployment plan for that component.  The outcome of each step triggers either the next step (on success) or a cleanup and rollback to the previous state (on failure).
+
+### Quality Gates in the Sample App
+One purpose of this sample app is to demonstrate user defined quality gates.  Quality gates associate deployment checks to one or more component images.  *During application deployment Skopos executes the specified checks to assess components deployed with matching images.*  
+
+This sample app uses quality gates specified in the `env-quality-gates.yaml` descriptor:
+
+```yaml
+quality_gates:
+
+    # check HTTP service is up
+    http_default:
+        images:
+            - opsani/sample-result:*
+            - opsani/sample-vote:*
+        steps:
+            - probe: opsani/probe-http
+
+    # check access to redis
+    redis:
+        images:
+            - redis:*
+        steps:
+            - probe:
+                image: opsani/probe-redis
+                action: check_access
+
+    # check access to postgres
+    postgres:
+        images:
+            - postgres:*
+        steps:
+            - probe:
+                image: opsani/probe-postgres
+                action: check_access
+```
+
+These checks are injected in the Skopos generated deployment plan for components deployed with matching images.  These checks are visible as steps in the Skopos UI plan view:  mouse-click on any of the `db`, `redis`, `result` or `vote` components to zoom-in the component plan details.  Here you can see the injected quality gate step for that component.  For example, the `db` component uses the Skopos [postgres probe](https://github.com/opsani/probe-postgres) to verify the postgres API is accessible on the component's service network:
+
+![skopos sample app](images/db-plan-details.png)
+
+A Skopos probe packages a service healthcheck as a container.  During application deployment, a probe is instantiated and attached to the service network of a target component.  From this position, the probe can verify the operation of the target service on the same network used to consume that service.  Skopos includes both generic probes for *tcp-connect* and *http* health-checks, as well as service specific probes for verifying service access in detail.  For more information, see [Skopos Probes](http://doc.opsani.com/skopos/edge/PROBES/)
+
+### Deploy the Sample App
+
+Deploy the application using the UI controls (*Start* icon to upper left).  If you follow the deployment progress in the Skopos Plan view, you can observe the deployment of each of the `db`, `redis`, `result` and `vote` components is validated by its associated quality gate.
+
+The application can also be deployed using the Skopos CLI (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
+
+```
+sks-ctl start --project sample-gates
+```
+
+After the deploy completes, the web interfaces exposed by the sample application are available at the gateway ports specified in the `env.swarm.yaml` environment descriptor:
+
+* Vote: http://my-ip-or-host:8880/
+* Result: http://my-ip-or-host:8881/
+
+### Teardown the Sample App
+To teardown the sample application using the Skopos UI:
+
+* Mouse-click on the *Deploy* icon to the upper left and select *Teardown* from its drop-down menu.  This causes Skopos to generate a teardown plan for the application.
+* Use the *Start* icon to execute the teardown plan.
+
+## Next steps
+
+Here are a few things you can try next:
+
+- Set up [continuous deployment with Skopos Auto-Pilot or Jenkins CI/CD](http://doc.opsani.com/skopos/edge/CICD/)
+- Add [chatops with Slack](http://doc.opsani.com/skopos/edge/CHATOPS/)
+- See some of the [standard deployment environments](http://doc.opsani.com/skopos/edge/TED-GUIDE/#standard-target-environment-files) Skopos supports
+
+... or just look at the full [Skopos Documentation](http://doc.opsani.com/skopos/edge/).
+
+You can also reach out to us on [Gitter](https://gitter.im/opsani/skopos) or by [email](mailto:support@opsani.com).

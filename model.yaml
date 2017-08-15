@@ -1,0 +1,73 @@
+doctype: "com.datagridsys.doctype/skopos/model"
+version: 1
+
+components:
+    vote:
+        image: opsani/sample-vote:2.0
+        replicas: ${vote_replicas-2}
+        provides:
+            ports: [ "80" ]
+        uses:
+            redis: {}
+        visual:
+            x: 370
+            y: 100
+
+    redis:
+        image: redis:3.2.2
+        singleton: true
+        provides:
+            ports: [ "6379" ]
+        visual:
+            x: 740
+            y: 200
+
+    worker:
+        image: opsani/sample-worker:1.0
+        replicas: ${worker_replicas-2}
+        uses:
+            db: {}
+            redis: {}
+        visual:
+            x: 370
+            y: 300
+
+    db:
+        image: postgres:9.4
+        singleton: true
+        provides:
+            ports: [ "5432" ]
+        visual:
+            x: 740
+            y: 400
+
+    result:
+        image: opsani/sample-result:2.0
+        replicas: 1
+        provides:
+            ports: [ "80" ]
+        uses:
+            db: {}
+        visual:
+            x: 370
+            y: 500
+
+gateways:
+    voting-gwy:
+        type: load_balancer
+        exposes:
+            - port: "${voting_port}/tcp"
+              target_port: "80"
+        target: [vote]
+        visual:
+            x: 50
+            y: 100
+    result-gwy:
+        type: load_balancer
+        exposes:
+            - port: "${result_port}/tcp"
+              target_port: "80"
+        target: [result]
+        visual:
+            x: 50
+            y: 500

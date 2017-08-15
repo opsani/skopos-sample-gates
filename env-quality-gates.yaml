@@ -1,0 +1,27 @@
+quality_gates:
+
+    # check HTTP service is up
+    http_default:
+        images:
+            - opsani/sample-result:*
+            - opsani/sample-vote:*
+        steps:
+            - probe: opsani/probe-http
+
+    # check access to redis
+    redis:
+        images:
+            - redis:*
+        steps:
+            - probe:
+                image: opsani/probe-redis
+                action: check_access
+
+    # check access to postgres
+    postgres:
+        images:
+            - postgres:*
+        steps:
+            - probe:
+                image: opsani/probe-postgres
+                action: check_access

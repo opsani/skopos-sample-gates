@@ -1,0 +1,9 @@
+core_plugin: docker-swarm
+service_discovery_plugin: docker-swarm
+service_discovery_auto: true
+
+vars:
+    voting_port:       "8880"
+    result_port:       "8881"
+    vote_replicas:     "3"
+    worker_replicas:   "2"

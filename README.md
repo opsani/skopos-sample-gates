@@ -10,9 +10,9 @@ _Note: this sample application uses the Skopos "edge" release which has all the 
 
 Skopos Sample Application
 ==========================
-This Skopos sample application is a scalable variant of the Docker example Pet Voting Application.  Notably, this application uses Skopos quality gates to validate its deployment.  [Quality gates](http://doc.opsani.com/skopos/edge/QUALITY-GATES/) attach user defined actions to components in order to *gate* the success of component deployment.
+This Skopos sample application is a scalable variant of the Docker example Pet Voting Application.  Notably, this application uses Skopos quality gates to validate its deployment.  [User defined quality gates](http://doc.opsani.com/skopos/edge/VERIFY-GUIDE#user-quality-gates) attach actions to components in order to *gate* the success of component deployment.  This application also demonstrates Skopos [automatic quality gates](http://doc.opsani.com/skopos/edge/VERIFY-GUIDE#autogates):  these are quality gates which Skopos automatically adds to deployment plans for components based on known images.
 
-This sample application deploys to Docker Swarm and exposes two web interfaces - one that allows votes to be cast and one that shows results.
+The sample application deploys to Docker Swarm and exposes two web interfaces - one that allows votes to be cast and one that shows results.
 
 ![skopos sample app](images/skopos-sample-gates.png)
 
@@ -50,7 +50,7 @@ The sample application is comprised of the following descriptors:
 
 * [model.yaml](/model.yaml) - application model
 * [env-swarm.yaml](/env-swarm.yaml) - basic [TED file](http://doc.opsani.com/skopos/edge/TED-GUIDE/) specifying core plugin and variables (e.g., port numbers, replicas)
-* [env-quality-gates.yaml](/env-quality-gates.yaml) - TED file specifying quality gates
+* [env-quality-gates.yaml](/env-quality-gates.yaml) - TED file specifying user defined quality gates
 
 Use `sks-ctl` to load the sample application (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
 
@@ -110,7 +110,12 @@ quality_gates:
                 action: check_access
 ```
 
-These checks are injected in the Skopos generated deployment plan for components deployed with matching images.  The quality gate checks are visible as steps in the Skopos UI plan view:  mouse-click on any of the `db`, `redis`, `result` or `vote` components to zoom-in the component plan details.  Here you can see the injected quality gate step for that component.  For example, the `db` component uses the Skopos [postgres probe](https://github.com/opsani/probe-postgres) to verify the postgres API is accessible on the component's service network:
+These checks are injected in the Skopos generated deployment plan for components deployed with matching images.  The quality gate checks are visible as steps in the Skopos UI plan view:  mouse-click on any of the `db`, `redis`, `result` or `vote` components to zoom-in the component plan details.  Here you can see the injected quality gate step(s) for that component.
+
+For example, the `db` component includes two quality gates which use the Skopos [postgres probe](https://github.com/opsani/probe-postgres) to verify the postgres service is up and its API is accessible on the component's service network:
+
+* *automatic quality gate*: Skopos includes an automatic quality gate for the `db` component because it is based on the official postgres image.  This gate verifies the postgres service is up on port 5432.  The *service_up* check will succeed if the postgres service is up, even if the connect response is authentication failure or invalid database.
+* *user defined quality gate*:  this quality gate comes from the `env-quality-gates.yaml` TED file and verifies the postgres API is accessible on the component's service network using the probe default user, password and database (these are configurable).
 
 ![skopos sample app](images/db-plan-details.png)
 
@@ -118,7 +123,7 @@ A Skopos probe packages a service healthcheck as a container.  During applicatio
 
 ### Deploy the Sample App
 
-Deploy the application using the UI controls (*Start* icon to upper left).  If you follow the deployment progress in the Skopos Plan view, you can observe the deployment of each of the `db`, `redis`, `result` and `vote` components is validated by its associated quality gate.
+Deploy the application using the UI controls (*Start* icon to upper left).  If you follow the deployment progress in the Skopos Plan view, you can observe the deployment of each of the `db`, `redis`, `result` and `vote` components is validated by its associated quality gate(s).
 
 The application can also be deployed using the Skopos CLI (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
 

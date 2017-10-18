@@ -20,7 +20,7 @@ The sample application deploys to Docker Swarm and exposes two web interfaces - 
 Skopos consists of two components:
 
 * The _Skopos engine_, packaged in a single container for simple installation
-* The _Skopos control utility_ - a command line utility `sks-ctl`, available for Linux, Mac OS and Windows. This utility may run on the same host where the Skopos engine runs or anywhere else with network access to that host.
+* The _Skopos control utility_ - a command line utility `skopos`, available for Linux, Mac OS and Windows. This utility may run on the same host where the Skopos engine runs or anywhere else with network access to that host.
 
 To start the Skopos engine, run the following command on a swarm manager node:
 
@@ -35,12 +35,12 @@ This command starts the Skopos engine and exposes its API and web-based user int
 To download the Skopos control utility on Linux:
 
 ```
-wget https://s3.amazonaws.com/get-skopos/edge/linux/sks-ctl
-chmod +x sks-ctl
-sudo mv sks-ctl /usr/local/bin
+wget https://s3.amazonaws.com/get-skopos/edge/linux/skopos
+chmod +x skopos
+sudo mv skopos /usr/local/bin
 ```
 
-Or download the control utility for [Mac OS X](https://s3.amazonaws.com/get-skopos/edge/darwin/sks-ctl) or [Windows](https://s3.amazonaws.com/get-skopos/egde/windows/sks-ctl.exe) and install it on the executable path.
+Or download the control utility for [Mac OS X](https://s3.amazonaws.com/get-skopos/edge/darwin/skopos) or [Windows](https://s3.amazonaws.com/get-skopos/egde/windows/skopos.exe) and install it on the executable path.
 
 ## Deploy the Sample App
 
@@ -52,10 +52,10 @@ The sample application is comprised of the following descriptors:
 * [env-swarm.yaml](/env-swarm.yaml) - basic [TED file](http://doc.opsani.com/skopos/edge/TED-GUIDE/) specifying core plugin and variables (e.g., port numbers, replicas)
 * [env-quality-gates.yaml](/env-quality-gates.yaml) - TED file specifying user defined quality gates
 
-Use `sks-ctl` to load the sample application (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
+Use the `skopos` utility to load the sample application (add `--bind hostname:port` after `skopos` if Skopos is not running locally on port 8100):
 
 ```
-sks-ctl load --project sample-gates \
+skopos load --project sample-gates \
 --env github://opsani/skopos-sample-gates/env-swarm.yaml \
 --env github://opsani/skopos-sample-gates/env-quality-gates.yaml \
 github://opsani/skopos-sample-gates/model.yaml
@@ -125,10 +125,10 @@ A Skopos probe packages a service healthcheck as a container.  During applicatio
 
 Deploy the application using the UI controls (*Start* icon to upper left).  If you follow the deployment progress in the Skopos Plan view, you can observe the deployment of each of the `db`, `redis`, `result` and `vote` components is validated by its associated quality gate(s).
 
-The application can also be deployed using the Skopos CLI (add `--bind hostname:port` after `sks-ctl` if Skopos is not running locally on port 8100):
+The application can also be deployed using the Skopos CLI (add `--bind hostname:port` after `skopos` if Skopos is not running locally on port 8100):
 
 ```
-sks-ctl start --project sample-gates
+skopos start --project sample-gates
 ```
 
 After the deploy completes, the web interfaces exposed by the sample application are available at the gateway ports specified in the `env.swarm.yaml` environment descriptor:

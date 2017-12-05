@@ -46,7 +46,7 @@ Or download the control utility for [Mac OS X](https://s3.amazonaws.com/get-skop
 The sample application is comprised of the following descriptors:
 
 * [model.yaml](/model.yaml) - application model
-* [env-k8s.yaml](/env-swarm.yaml) - basic [TED file](http://doc.opsani.com/skopos/edge/TED-GUIDE/) specifying core plugin and variables (e.g., port numbers, replicas)
+* [env-k8s.yaml](/env-k8s.yaml) - basic [TED file](http://doc.opsani.com/skopos/edge/TED-GUIDE/) specifying core plugin and variables (e.g., port numbers, replicas)
 * [env-quality-gates.yaml](/env-quality-gates.yaml) - TED file specifying user defined quality gates
 
 Use the `skopos` utility to load the sample application (`<ip_address>` is an IP address of a Kubernetes node):
@@ -128,7 +128,7 @@ The application can also be deployed using the Skopos CLI:
 skopos --bind <ip_address>:32100 start --project sample-gates
 ```
 
-After the deploy completes, the web interfaces exposed by the sample application are available at the gateway ports specified in the `env.swarm.yaml` environment descriptor:
+After the deploy completes, the web interfaces exposed by the sample application are available at the gateway ports specified in the `env.k8s.yaml` environment descriptor:
 
 * Vote: http://<ip_address>:30000/
 * Result: http://<ip_address>:30001/

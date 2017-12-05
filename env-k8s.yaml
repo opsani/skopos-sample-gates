@@ -1,0 +1,9 @@
+core_plugin: k8s
+service_discovery_plugin: k8s
+service_discovery_auto: true
+
+vars:
+    voting_port:       "30000"
+    result_port:       "30001"
+    vote_replicas:     "3"
+    worker_replicas:   "2"

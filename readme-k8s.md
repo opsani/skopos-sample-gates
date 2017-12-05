@@ -4,15 +4,15 @@ Skopos Continuous Deployment System
 ==========================
 [Skopos™](http://opsani.com/skopos/) is a modern continuous deployment system for container-based services, especially for DevOps teams and those using microservice architectures.
 
-Below you can find a sample application and instructions for starting Skopos and deploying this sample app on Docker Swarm.  If you want to try out Skopos with your own app, check out our [Getting Started Guide](http://doc.opsani.com/skopos/edge/GET-STARTED).
+Below you can find a sample application and instructions for starting Skopos and deploying this sample app on Kubernetes.  If you want to try out Skopos with your own app, check out our [Getting Started Guide](http://doc.opsani.com/skopos/edge/GET-STARTED).
 
-> _To deploy this sample app on Kubernetes, see this [document](/readme-k8s.md)._
+> _To deploy this sample app on Docker Swarm, see this [document](/README.md)._
 
 Skopos Sample Application
 ==========================
 This Skopos sample application is a scalable variant of the Docker example Pet Voting Application.  Notably, this application uses Skopos quality gates to validate its deployment.  [User defined quality gates](http://doc.opsani.com/skopos/edge/VERIFY-GUIDE#user-quality-gates) attach actions to components in order to *gate* the success of component deployment.  This application also demonstrates Skopos [automatic quality gates](http://doc.opsani.com/skopos/edge/VERIFY-GUIDE#autogates):  these are quality gates which Skopos automatically adds to deployment plans for components based on known images.
 
-The sample application deploys to Docker Swarm and exposes two web interfaces - one that allows votes to be cast and one that shows results.
+The sample application deploys to Kubernetes and exposes two web interfaces - one that allows votes to be cast and one that shows results.
 
 ![skopos sample app](images/skopos-sample-gates.png)
 
@@ -22,15 +22,12 @@ Skopos consists of two components:
 * The _Skopos engine_, packaged in a single container for simple installation
 * The _Skopos control utility_ - a command line utility `skopos`, available for Linux, Mac OS and Windows. This utility may run on the same host where the Skopos engine runs or anywhere else with network access to that host.
 
-To start the Skopos engine, run the following command on a swarm manager node:
+To start Skopos on a Kubernetes cluster:
 
-```
-docker run -d -p 8100:8100 --restart=unless-stopped --name skopos \
-   -v /var/run/docker.sock:/var/run/docker.sock \
-   opsani/skopos:edge
-```
+- download the following file: [`skopos-k8s.yaml`](http://doc.opsani.com/skopos/edge/skopos-k8s.yaml)
+- run `kubectl apply -f skopos-k8s.yaml`
 
-This command starts the Skopos engine and exposes its API and web-based user interface on port 8100 of the host. See [Starting Skopos](http://doc.opsani.com/skopos/edge/INSTALL/) for additional options, including enabling authentication.
+This command starts the Skopos engine and exposes its API and web-based user interface on a NodePort 32100 on your cluster. You can modify the `skopos-k8s.yaml` file to adjust the service type (e.g., load balancer), port number and specific Skopos image (`:edge` is the default).  See [Starting Skopos](http://doc.opsani.com/skopos/edge/INSTALL/) for additional options, including enabling authentication.
 
 To download the Skopos control utility on Linux:
 
@@ -49,19 +46,19 @@ Or download the control utility for [Mac OS X](https://s3.amazonaws.com/get-skop
 The sample application is comprised of the following descriptors:
 
 * [model.yaml](/model.yaml) - application model
-* [env-swarm.yaml](/env-swarm.yaml) - basic [TED file](http://doc.opsani.com/skopos/edge/TED-GUIDE/) specifying core plugin and variables (e.g., port numbers, replicas)
+* [env-k8s.yaml](/env-swarm.yaml) - basic [TED file](http://doc.opsani.com/skopos/edge/TED-GUIDE/) specifying core plugin and variables (e.g., port numbers, replicas)
 * [env-quality-gates.yaml](/env-quality-gates.yaml) - TED file specifying user defined quality gates
 
-Use the `skopos` utility to load the sample application (add `--bind hostname:port` after `skopos` if Skopos is not running locally on port 8100):
+Use the `skopos` utility to load the sample application (`<ip_address>` is an IP address of a Kubernetes node):
 
 ```
-skopos load --project sample-gates \
---env github://opsani/skopos-sample-gates/env-swarm.yaml \
+skopos --bind <ip_address>:32100 load --project sample-gates \
+--env github://opsani/skopos-sample-gates/env-k8s.yaml \
 --env github://opsani/skopos-sample-gates/env-quality-gates.yaml \
 github://opsani/skopos-sample-gates/model.yaml
 ```
 
-This command loads the application model and environment descriptors directly from github.  Once the application is loaded, open the Skopos GUI in a browser:  this UI is exposed on port 8100 of the host running the Skopos engine.
+This command loads the application model and environment descriptors directly from github.  Once the application is loaded, open the Skopos GUI in a browser:  this UI is exposed on port 32100 of the host running the Skopos engine.
 
 The UI displays the Skopos application list when first opened:
 
@@ -125,16 +122,16 @@ A Skopos probe packages a service healthcheck as a container.  During applicatio
 
 Deploy the application using the UI controls (*Start* icon to upper left).  If you follow the deployment progress in the Skopos Plan view, you can observe the deployment of each of the `db`, `redis`, `result` and `vote` components is validated by its associated quality gate(s).
 
-The application can also be deployed using the Skopos CLI (add `--bind hostname:port` after `skopos` if Skopos is not running locally on port 8100):
+The application can also be deployed using the Skopos CLI:
 
 ```
-skopos start --project sample-gates
+skopos --bind <ip_address>:32100 start --project sample-gates
 ```
 
 After the deploy completes, the web interfaces exposed by the sample application are available at the gateway ports specified in the `env.swarm.yaml` environment descriptor:
 
-* Vote: http://my-ip-or-host:8880/
-* Result: http://my-ip-or-host:8881/
+* Vote: http://<ip_address>:30000/
+* Result: http://<ip_address>:30001/
 
 ### Teardown the Sample App
 To teardown the sample application using the Skopos UI:

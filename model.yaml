@@ -54,7 +54,7 @@ components:
 
 gateways:
     voting-gwy:
-        type: load_balancer
+        type: host_port
         exposes:
             - port: "${voting_port}/tcp"
               target_port: "80"
@@ -63,7 +63,7 @@ gateways:
             x: 50
             y: 100
     result-gwy:
-        type: load_balancer
+        type: host_port
         exposes:
             - port: "${result_port}/tcp"
               target_port: "80"
